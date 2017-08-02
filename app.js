@@ -27,6 +27,13 @@ var options = {
     passphrase: 'mini-hospital',
 };
 
+if (config.erizoController.sslCaCerts) {
+    options.ca = [];
+    for (var ca in config.erizoController.sslCaCerts) {
+        options.ca.push(fs.readFileSync(config.erizoController.sslCaCerts[ca]).toString());
+    }
+}
+
 var app = express(),
     session = express.session({ secret: 'super-duper-secret-secret' });
 // all environments
@@ -95,6 +102,27 @@ http.createServer(appHttp).listen(appHttp.get('port'), function(){
 
 
 N.API.init(config.nuve.superserviceID, config.nuve.superserviceKey, 'http://localhost:3000/');
+
+app.use(function(req, res, next) {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+  next();
+});
+
+app.use(function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'POST, GET, OPTIONS, DELETE');
+    res.header('Access-Control-Allow-Headers', 'origin, content-type');
+    if (req.method === 'OPTIONS') {
+        res.send(200);
+    } else {
+        next();
+    }
+});
+
+var uxioPort = 8005
+app.listen(uxioPort)
+console.log('Uxio alternative express server http listening on port ' + uxioPort);
 
 function deleteAllRooms() {
     'use strict';
